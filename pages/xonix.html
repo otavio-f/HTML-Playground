@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Xonix</title>
+    <style>
+      * {
+        background-color: transparent;
+        margin: 0;
+        box-sizing: border-box;
+      }
+
+      .content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      td {
+        width: 33.33%;
+      }
+    </style>
+  </head>
+  <body>
+    <span id="loader" style="display: none">
+      <img id="ball" src="../static/ball.svg" />
+      <img id="court" src="../static/court.svg" />
+    </span>
+
+    <div
+      class="content"
+      id="background"
+      style="
+        background-image: url('../static/RETROWAVE-OASIS-33331.png');
+        background-size: 100%;
+      "
+    ></div>
+    <div
+      class="content"
+      id="game"
+      style="z-index: 10; background-color: rgba(0, 0, 0, 0.85)"
+    >
+      <table
+        style="
+          width: 100%;
+          height: 5%;
+          color: white;
+          font-family: monospace;
+          padding: 1em 5% 1em; 5%;
+        "
+        id="score"
+      >
+        <tbody>
+          <tr>
+            <td id="time" style="text-align: left">--:--</td>
+            <td id="score" style="text-align: center">----</td>
+            <td id="progress" style="text-align: right">--%</td>
+          </tr>
+        </tbody>
+      </table>
+      <canvas
+        id="playground"
+        width="500"
+        height="500"
+        style="
+          width: 85vh;
+          height: 85vh;
+          position: absolute;
+          top: 10vh;
+          left: calc((100vw - 85vh) / 2);
+          border: 2px solid white;
+        "
+      ></canvas>
+    </div>
+
+    <script>
+      const ball = document.getElementById("ball");
+      const canvas = document.getElementById("playground");
+      const score = document.getElementById("score");
+      const progress = document.getElementById("progress");
+
+      let time;
+      let angels;
+      let devils;
+      let failed = false;
+
+      const Ball = function (img, size, speed, x0, y0) {
+        const image = img.cloneNode();
+        const w = size;
+        const h = size;
+        let vx = speed;
+        let vy = speed;
+        let x = x0;
+        let y = y0;
+        return {
+          get x() {
+            return x;
+          },
+          get y() {
+            return y;
+          },
+          get w() {
+            return w;
+          },
+          get h() {
+            return h;
+          },
+          draw: function (context) {
+            context.drawImage(image, x, y, w, h);
+          },
+          update: function () {
+            x += vx;
+            y += xy;
+          },
+          isOutside: function (box) {
+            return {
+              x: x <= box.x || x + w >= box.x + box.w,
+              y: y <= box.y || y + h >= box.y + box.h,
+            };
+          },
+          flipX: function () {
+            vx *= -1;
+          },
+          flipY: function () {
+            vy *= -1;
+          },
+          moveTo: function (xb, yb) {
+            x = xb;
+            y = yb;
+          },
+        };
+      };
+
+      if (!sessionStorage.challengeLevel) {
+        sessionStorage.challengeLevel = 1;
+      }
+
+      switch (Number(sessionStorage.challengeLevel)) {
+        case 1:
+          time = 10;
+          angels = [Ball(ball, 16, 1, 91, 32)];
+          devils = [];
+          break;
+      }
+
+      const timeTick = setInterval(() => {
+        const counter = document.getElementById("time");
+        if (time <= 0 && !failed) {
+          failed = true;
+          time = 0;
+          counter.innerText = "00:00";
+          return;
+        }
+
+        const mins = Math.floor(time / 60)
+          .toString()
+          .padStart(2, "0");
+        const secs = Math.floor(time % 60)
+          .toString()
+          .padStart(2, "0");
+        counter.innerText = `${mins}:${secs}`;
+        time--;
+      }, 1000);
+
+      const update = setInterval(() => {
+        const court = { x: 16, y: 16, w: 484, h: 484 };
+
+        for (ball in devils) {
+          const oob = ball.isOutside(court);
+          if (oob.x) {
+            ball.flipX();
+          }
+          if (oob.y) {
+            ball.flipY();
+          }
+          ball.update();
+        }
+      }, 1000 / 60);
+
+      const draw = function () {
+        const canvas = document.getElementById("playground");
+        const context = canvas.getContext("2d");
+        context.save();
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        for (ball in devils) {
+          ball.draw(context);
+        }
+        context.restore();
+        if (!failed) {
+          requestAnimationFrame(draw);
+        } else {
+          clearInterval(update);
+          clearInterval(timeTick);
+        }
+      };
+
+      draw();
+    </script>
+  </body>
+</html>
