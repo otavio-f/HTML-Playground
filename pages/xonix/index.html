@@ -17,10 +17,13 @@
         height: 100%;
       }
 
-      td {
+      /* td {
         width: 33.33%;
-      }
+      } */
     </style>
+    <script>
+      let time = 60;
+    </script>
   </head>
   <body>
     <span id="loader" style="display: none">
@@ -41,13 +44,54 @@
       id="game"
       style="z-index: 10; background-color: rgba(0, 0, 0, 0.85)"
     >
-      <table
+      <div
+        id="score"
+        style="
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          width: 100%;
+          height: 5%;
+          color: white;
+          font-family: monospace;
+          padding: 1em 5%;
+        "
+      >
+        <div id="time" onload="setInterval(function() {time--}, 1000);">
+          --:--
+        </div>
+        <div id="score">----</div>
+        <div id="progress">--%</div>
+        <script>
+          const timeDisplay = document.getElementById("time");
+          if (time <= 0) {
+            timeDisplay.innerText("00:00");
+            window.postMessage({
+              type: "lose",
+              reason: "timeout",
+            });
+            //TODO: disable this timer instead
+          } else {
+            setInterval(function () {
+              let mins = Math.floor(time / 60)
+                .toString()
+                .padStart(2, "0");
+              let secs = Math.floor(time % 60)
+                .toString()
+                .padStart(2, "0");
+              timeDisplay.innerText = `${mins}:${secs}`;
+              time--;
+            }, 1000);
+          }
+        </script>
+      </div>
+      <!-- <table
         style="
           width: 100%;
           height: 5%;
           color: white;
           font-family: monospace;
-          padding: 1em 5% 1em; 5%;
+          padding: 1em 5% 1em 5%;
         "
         id="score"
       >
@@ -58,7 +102,7 @@
             <td id="progress" style="text-align: right">--%</td>
           </tr>
         </tbody>
-      </table>
+      </table> -->
       <canvas
         id="playground"
         width="500"
@@ -74,6 +118,7 @@
       ></canvas>
     </div>
 
+    <!--
     <script>
       const ball = document.getElementById("ball");
       const canvas = document.getElementById("playground");
@@ -197,5 +242,6 @@
 
       draw();
     </script>
+    -->
   </body>
 </html>

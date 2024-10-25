@@ -36,30 +36,27 @@
         HTML Playground
       </h1>
     </header>
-    <div
-      class="sidebar"
-      style="
-        display: inline-block;
-        width: 10%;
-        min-height: 100vh;
-        margin: 0;
-        padding-left: 2em;
-        padding-top: 2em;
-        border-right: 1px solid #eee;
-      "
-    >
-      <div class="sidebarLink"><a href="">Games</a></div>
-      <div class="sidebarLink"><a href="">Misc</a></div>
-      <div class="sidebarLink"><a href="">About</a></div>
+    <div id="main" style="display: flex">
+      <div
+        class="sidebar"
+        style="
+          display: flex;
+          flex-direction: column;
+          width: 10%;
+          min-height: 100vh;
+          padding-top: 2em;
+          padding-left: 2em;
+          border-right: 1px solid #eee;
+        "
+      >
+        <a class="sidebarLink" href="pages/games.html">Games</a>
+        <a class="sidebarLink" href="">Misc</a>
+        <a class="sidebarLink" href="">About</a>
+      </div>
+      <div
+        id="content"
+        style="width: 90px; height: 80px; background-color: #111"
+      ></div>
     </div>
-    <div
-      id="content"
-      style="
-        display: inline-block;
-        width: 100px;
-        height: 100px;
-        background-color: #111;
-      "
-    ></div>
   </body>
 </html>
