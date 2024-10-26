@@ -17,19 +17,61 @@
         height: 100%;
       }
 
-      /* td {
-        width: 33.33%;
-      } */
+      @keyframes appear {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
     </style>
-    <script>
-      let time = 60;
-    </script>
   </head>
   <body>
     <span id="loader" style="display: none">
       <img id="ball" src="static/ball.svg" />
       <img id="court" src="static/court.svg" />
     </span>
+
+    <div
+      id="overlay"
+      class="content"
+      style="
+        display: none;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        flex-direction: column;
+        justify-content: center;
+        opacity: 0;
+        background-color: rgba(0, 0, 0, 1);
+        z-index: 10;
+        animation-name: appear;
+        animation-duration: 1s;
+      "
+    >
+      <span
+        style="
+          width: 100%;
+          font-size: 3em;
+          text-align: center;
+          font-family: monospace;
+          font-style: italic;
+          color: #66f;
+        "
+        >GAME 0VER</span
+      >
+      <script>
+        document.addEventListener("onlose", function (ev) {
+          console.log(ev);
+          if (ev.detail.reason === "timeout") {
+            const lostOverlay = document.getElementById("overlay");
+            lostOverlay.style.display = "flex";
+            lostOverlay.style.opacity = 1;
+          }
+        });
+      </script>
+    </div>
 
     <div
       class="content"
@@ -42,7 +84,7 @@
     <div
       class="content"
       id="game"
-      style="z-index: 10; background-color: rgba(0, 0, 0, 0.85)"
+      style="z-index: 5; background-color: rgba(0, 0, 0, 0.85)"
     >
       <div
         id="score"
@@ -57,52 +99,33 @@
           padding: 1em 5%;
         "
       >
-        <div id="time" onload="setInterval(function() {time--}, 1000);">
-          --:--
-        </div>
-        <div id="score">----</div>
-        <div id="progress">--%</div>
+        <div id="time">01:00</div>
+        <div id="score">0000</div>
+        <div id="progress">0%</div>
         <script>
+          let time = 60;
           const timeDisplay = document.getElementById("time");
-          if (time <= 0) {
-            timeDisplay.innerText("00:00");
-            window.postMessage({
-              type: "lose",
-              reason: "timeout",
-            });
-            //TODO: disable this timer instead
-          } else {
-            setInterval(function () {
-              let mins = Math.floor(time / 60)
-                .toString()
-                .padStart(2, "0");
-              let secs = Math.floor(time % 60)
-                .toString()
-                .padStart(2, "0");
-              timeDisplay.innerText = `${mins}:${secs}`;
-              time--;
-            }, 1000);
-          }
+          let interval = setInterval(function () {
+            if (time <= 0) {
+              timeDisplay.innerText = "00:00";
+              const ev = new CustomEvent("onlose", {
+                detail: { reason: "timeout" },
+              });
+              document.dispatchEvent(ev);
+              clearInterval(interval);
+              return;
+            }
+            let mins = Math.floor(time / 60)
+              .toString()
+              .padStart(2, "0");
+            let secs = Math.floor(time % 60)
+              .toString()
+              .padStart(2, "0");
+            timeDisplay.innerText = `${mins}:${secs}`;
+            time--;
+          }, 1000);
         </script>
       </div>
-      <!-- <table
-        style="
-          width: 100%;
-          height: 5%;
-          color: white;
-          font-family: monospace;
-          padding: 1em 5% 1em 5%;
-        "
-        id="score"
-      >
-        <tbody>
-          <tr>
-            <td id="time" style="text-align: left">--:--</td>
-            <td id="score" style="text-align: center">----</td>
-            <td id="progress" style="text-align: right">--%</td>
-          </tr>
-        </tbody>
-      </table> -->
       <canvas
         id="playground"
         width="500"
@@ -117,131 +140,6 @@
         "
       ></canvas>
     </div>
-
-    <!--
-    <script>
-      const ball = document.getElementById("ball");
-      const canvas = document.getElementById("playground");
-      const score = document.getElementById("score");
-      const progress = document.getElementById("progress");
-
-      let time;
-      let angels;
-      let devils;
-      let failed = false;
-
-      const Ball = function (img, size, speed, x0, y0) {
-        const image = img.cloneNode();
-        const w = size;
-        const h = size;
-        let vx = speed;
-        let vy = speed;
-        let x = x0;
-        let y = y0;
-        return {
-          get x() {
-            return x;
-          },
-          get y() {
-            return y;
-          },
-          get w() {
-            return w;
-          },
-          get h() {
-            return h;
-          },
-          draw: function (context) {
-            context.drawImage(image, x, y, w, h);
-          },
-          update: function () {
-            x += vx;
-            y += xy;
-          },
-          isOutside: function (box) {
-            return {
-              x: x <= box.x || x + w >= box.x + box.w,
-              y: y <= box.y || y + h >= box.y + box.h,
-            };
-          },
-          flipX: function () {
-            vx *= -1;
-          },
-          flipY: function () {
-            vy *= -1;
-          },
-          moveTo: function (xb, yb) {
-            x = xb;
-            y = yb;
-          },
-        };
-      };
-
-      if (!sessionStorage.challengeLevel) {
-        sessionStorage.challengeLevel = 1;
-      }
-
-      switch (Number(sessionStorage.challengeLevel)) {
-        case 1:
-          time = 10;
-          angels = [Ball(ball, 16, 1, 91, 32)];
-          devils = [];
-          break;
-      }
-
-      const timeTick = setInterval(() => {
-        const counter = document.getElementById("time");
-        if (time <= 0 && !failed) {
-          failed = true;
-          time = 0;
-          counter.innerText = "00:00";
-          return;
-        }
-
-        const mins = Math.floor(time / 60)
-          .toString()
-          .padStart(2, "0");
-        const secs = Math.floor(time % 60)
-          .toString()
-          .padStart(2, "0");
-        counter.innerText = `${mins}:${secs}`;
-        time--;
-      }, 1000);
-
-      const update = setInterval(() => {
-        const court = { x: 16, y: 16, w: 484, h: 484 };
-
-        for (ball in devils) {
-          const oob = ball.isOutside(court);
-          if (oob.x) {
-            ball.flipX();
-          }
-          if (oob.y) {
-            ball.flipY();
-          }
-          ball.update();
-        }
-      }, 1000 / 60);
-
-      const draw = function () {
-        const canvas = document.getElementById("playground");
-        const context = canvas.getContext("2d");
-        context.save();
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        for (ball in devils) {
-          ball.draw(context);
-        }
-        context.restore();
-        if (!failed) {
-          requestAnimationFrame(draw);
-        } else {
-          clearInterval(update);
-          clearInterval(timeTick);
-        }
-      };
-
-      draw();
-    </script>
-    -->
+    <script></script>
   </body>
 </html>
